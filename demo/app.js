@@ -8,7 +8,7 @@ var basicAuth = require('basic-auth');
 var auth = function(req, res, next) {
   function unauthorized(res) {
     res.set('WWW-Authenticate', 'Basic realm=Authorization Required')
-    return res.send(401)
+    return res.sendStatus(401)
   }
   var user = basicAuth(req)
   if (!user || !user.name || !user.pass) {
@@ -49,8 +49,8 @@ app.post('/terminals', auth, function (req, res) {
       rows = parseInt(req.query.rows),
       term = pty.spawn(process.platform === 'win32' ? 'cmd.exe' : 'bash', [], {
         name: 'xterm-color',
-        cols: cols || 80,
-        rows: rows || 24,
+        cols: cols || 120,
+        rows: rows || 48,
         cwd: process.env.HOME,
         env: process.env
       });
