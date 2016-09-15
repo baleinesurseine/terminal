@@ -3,6 +3,23 @@ var app = express();
 var expressWs = require('express-ws')(app);
 var os = require('os');
 var pty = require('pty.js');
+var basicAuth = require('basic-auth');
+
+var auth = function(req, res, next) {
+  function unauthorized(res) {
+    res.set('WWW-Authenticate', 'Basic realm=Authorization Required')
+    return res.send(401)
+  }
+  var user = basicAuth(req)
+  if (!user || !user.name || !user.pass) {
+    return unauthorized(res)
+  }
+  if (user.name === 'baleinesurseine' && user.pass === 'golubgen1969') {
+    return next()
+  } else {
+    return unauthorized(res)
+  }
+}
 
 var terminals = {},
     logs = {};
@@ -10,7 +27,7 @@ var terminals = {},
 app.use('/build', express.static(__dirname + '/../build'));
 app.use('/addons', express.static(__dirname + '/../addons'));
 
-app.get('/', function(req, res){
+app.get('/', auth, function(req, res){
   res.sendFile(__dirname + '/index.html');
 });
 
@@ -18,11 +35,11 @@ app.get('/style.css', function(req, res){
   res.sendFile(__dirname + '/style.css');
 });
 
-app.get('/main.js', function(req, res){
+app.get('/main.js', auth, function(req, res){
   res.sendFile(__dirname + '/main.js');
 });
 
-app.post('/terminals', function (req, res) {
+app.post('/terminals', auth, function (req, res) {
   var cols = parseInt(req.query.cols),
       rows = parseInt(req.query.rows),
       term = pty.spawn(process.platform === 'win32' ? 'cmd.exe' : 'bash', [], {
@@ -43,7 +60,7 @@ app.post('/terminals', function (req, res) {
   res.end();
 });
 
-app.post('/terminals/:pid/size', function (req, res) {
+app.post('/terminals/:pid/size', auth, function (req, res) {
   var pid = parseInt(req.params.pid),
       cols = parseInt(req.query.cols),
       rows = parseInt(req.query.rows),
@@ -53,6 +70,7 @@ app.post('/terminals/:pid/size', function (req, res) {
   console.log('Resized terminal ' + pid + ' to ' + cols + ' cols and ' + rows + ' rows.');
   res.end();
 });
+
 
 app.ws('/terminals/:pid', function (ws, req) {
   var term = terminals[parseInt(req.params.pid)];
@@ -70,12 +88,18 @@ app.ws('/terminals/:pid', function (ws, req) {
     term.write(msg);
   });
   ws.on('close', function () {
-    process.kill(term.pid);
+    try {
+      process.kill(term.pid);
+    } catch (ex) {
+
+    }
+
     console.log('Closed terminal ' + term.pid);
     // Clean things up
     delete terminals[term.pid];
     delete logs[term.pid];
   });
+
 });
 
 var port = process.env.PORT || 3000,

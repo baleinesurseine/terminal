@@ -27,7 +27,7 @@ function setTerminalSize () {
 colsElement.addEventListener('change', setTerminalSize);
 rowsElement.addEventListener('change', setTerminalSize);
 
-optionElements.cursorBlink.addEventListener('change', createTerminal);
+// optionElements.cursorBlink.addEventListener('change', createTerminal);
 
 createTerminal();
 
@@ -37,7 +37,7 @@ function createTerminal() {
     terminalContainer.removeChild(terminalContainer.children[0]);
   }
   term = new Terminal({
-    cursorBlink: optionElements.cursorBlink.checked
+    cursorBlink: true //  optionElements.cursorBlink.checked
   });
   term.on('resize', function (size) {
     if (!pid) {
