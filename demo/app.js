@@ -14,7 +14,7 @@ var auth = function(req, res, next) {
   if (!user || !user.name || !user.pass) {
     return unauthorized(res)
   }
-  if (user.name === 'baleinesurseine' && user.pass === 'golubgen1969') {
+  if (user.name === process.env.NAME && user.pass === process.env.PASSWD) {
     return next()
   } else {
     return unauthorized(res)
@@ -39,6 +39,11 @@ app.get('/main.js', auth, function(req, res){
   res.sendFile(__dirname + '/main.js');
 });
 
+app.get('/fetch.js', auth, function(req, res){
+  res.sendFile(__dirname + '/fetch.min.js');
+});
+
+
 app.post('/terminals', auth, function (req, res) {
   var cols = parseInt(req.query.cols),
       rows = parseInt(req.query.rows),
@@ -46,7 +51,7 @@ app.post('/terminals', auth, function (req, res) {
         name: 'xterm-color',
         cols: cols || 80,
         rows: rows || 24,
-        cwd: process.env.PWD,
+        cwd: process.env.HOME,
         env: process.env
       });
 
@@ -71,7 +76,6 @@ app.post('/terminals/:pid/size', auth, function (req, res) {
   res.end();
 });
 
-
 app.ws('/terminals/:pid', function (ws, req) {
   var term = terminals[parseInt(req.params.pid)];
   console.log('Connected to terminal ' + term.pid);
@@ -91,15 +95,12 @@ app.ws('/terminals/:pid', function (ws, req) {
     try {
       process.kill(term.pid);
     } catch (ex) {
-
     }
-
     console.log('Closed terminal ' + term.pid);
     // Clean things up
     delete terminals[term.pid];
     delete logs[term.pid];
   });
-
 });
 
 var port = process.env.PORT || 3000,
