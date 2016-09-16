@@ -13,6 +13,8 @@ var terminalContainer = document.getElementById('terminal-container'),
     colsElement = document.getElementById('cols'),
     rowsElement = document.getElementById('rows');
 
+
+
 function setTerminalSize () {
   var cols = parseInt(colsElement.value),
       rows = parseInt(rowsElement.value),
@@ -53,6 +55,7 @@ function createTerminal() {
   socketURL = protocol + location.hostname + ((location.port) ? (':' + location.port) : '') + '/terminals/';
 
   term.open(terminalContainer);
+
   term.fit();
 
   var initialGeometry = term.proposeGeometry(),
