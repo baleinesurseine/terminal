@@ -16,17 +16,17 @@
     /*
      * CommonJS environment
      */
-    module.exports = fit(require('../../src/xterm'));
-  } else if (typeof define == 'function') {
+    module.exports = fit(require('../../src/xterm'))
+  } else if (typeof define === 'function') {
     /*
      * Require.js is available
      */
-    define(['../../src/xterm'], fit);
+    define(['../../src/xterm'], fit)
   } else {
     /*
      * Plain browser environment
      */
-    fit(window.Terminal);
+    fit(window.Terminal)
   }
 })(function (Xterm) {
   /**
@@ -34,53 +34,53 @@
    *
    * @module xterm/addons/fit/fit
    */
-  var exports = {};
+  var exports = {}
 
   exports.proposeGeometry = function (term) {
-    var parentElementStyle = window.getComputedStyle(term.element.parentElement),
-        parentElementHeight = parseInt(parentElementStyle.getPropertyValue('height')),
-        parentElementWidth = parseInt(parentElementStyle.getPropertyValue('width')),
-        elementStyle = window.getComputedStyle(term.element),
-        elementPaddingVer = parseInt(elementStyle.getPropertyValue('padding-top')) + parseInt(elementStyle.getPropertyValue('padding-bottom')),
-        elementPaddingHor = parseInt(elementStyle.getPropertyValue('padding-right')) + parseInt(elementStyle.getPropertyValue('padding-left')),
-        availableHeight = parentElementHeight - elementPaddingVer,
-        availableWidth = parentElementWidth - elementPaddingHor,
-        container = term.rowContainer,
-        subjectRow = term.rowContainer.firstElementChild,
-        contentBuffer = subjectRow.innerHTML,
-        characterHeight,
-        rows,
-        characterWidth,
-        cols,
-        geometry;
+    var parentElementStyle = window.getComputedStyle(term.element.parentElement)
+    var parentElementHeight = parseInt(parentElementStyle.getPropertyValue('height'))
+    var parentElementWidth = parseInt(parentElementStyle.getPropertyValue('width'))
+    var elementStyle = window.getComputedStyle(term.element)
+    var elementPaddingVer = parseInt(elementStyle.getPropertyValue('padding-top')) + parseInt(elementStyle.getPropertyValue('padding-bottom'))
+    var elementPaddingHor = parseInt(elementStyle.getPropertyValue('padding-right')) + parseInt(elementStyle.getPropertyValue('padding-left'))
+    var availableHeight = parentElementHeight - elementPaddingVer
+    var availableWidth = parentElementWidth - elementPaddingHor
+    var container = term.rowContainer
+    var subjectRow = term.rowContainer.firstElementChild
+    var contentBuffer = subjectRow.innerHTML
+    var characterHeight
+    var rows
+    var characterWidth
+    var cols
+    var geometry
 
-    subjectRow.style.display = 'inline';
-    subjectRow.innerHTML = 'W'; // Common character for measuring width, although on monospace
-    characterWidth = subjectRow.getBoundingClientRect().width;
-    subjectRow.style.display = ''; // Revert style before calculating height, since they differ.
-    characterHeight = parseInt(subjectRow.offsetHeight);
-    subjectRow.innerHTML = contentBuffer;
+    subjectRow.style.display = 'inline'
+    subjectRow.innerHTML = 'W' // Common character for measuring width, although on monospace
+    characterWidth = subjectRow.getBoundingClientRect().width
+    subjectRow.style.display = '' // Revert style before calculating height, since they differ.
+    characterHeight = parseInt(subjectRow.offsetHeight)
+    subjectRow.innerHTML = contentBuffer
 
-    rows = parseInt(availableHeight / characterHeight);
-    cols = parseInt(availableWidth / characterWidth) - 1;
+    rows = parseInt(availableHeight / characterHeight)
+    cols = parseInt(availableWidth / characterWidth) - 1
 
-    geometry = {cols: cols, rows: rows};
-    return geometry;
-  };
+    geometry = {cols: cols, rows: rows}
+    return geometry
+  }
 
   exports.fit = function (term) {
-    var geometry = exports.proposeGeometry(term);
+    var geometry = exports.proposeGeometry(term)
 
-    term.resize(geometry.cols, geometry.rows);
-  };
+    term.resize(geometry.cols, geometry.rows)
+  }
 
   Xterm.prototype.proposeGeometry = function () {
-    return exports.proposeGeometry(this);
-  };
+    return exports.proposeGeometry(this)
+  }
 
   Xterm.prototype.fit = function () {
-    return exports.fit(this);
-  };
+    return exports.fit(this)
+  }
 
-  return exports;
-});
+  return exports
+})

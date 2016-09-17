@@ -1,170 +1,151 @@
-var term,
-    protocol,
-    socketURL,
-    socket,
-    pid,
-    charWidth,
-    charHeight;
+var term
+var protocol
+var socketURL
+var socket
+var pid
+var charWidth
+var charHeight
 
-var terminalContainer = document.getElementById('terminal-container'),
-    optionElements = {
-      cursorBlink: document.querySelector('#option-cursor-blink')
-    },
-    colsElement = document.getElementById('cols'),
-    rowsElement = document.getElementById('rows'),
-    pidElement = document.getElementById('pid-container');
-
-
+var terminalContainer = document.getElementById('terminal-container')
+var colsElement = document.getElementById('cols')
+var rowsElement = document.getElementById('rows')
+var pidElement = document.getElementById('pid-container')
 
 function setTerminalSize () {
+  var cols = parseInt(colsElement.value)
+  var rows = parseInt(rowsElement.value)
+  var width = (cols * charWidth).toString() + 'px'
+  var height = (rows * charHeight).toString() + 'px'
 
-  var cols = parseInt(colsElement.value),
-      rows = parseInt(rowsElement.value),
-      width = (cols * charWidth).toString() + 'px',
-      height = (rows * charHeight).toString() + 'px';
+  console.log('set terminal size ' + width + ',' + height)
+  console.log(cols + ',' + rows)
 
-      console.log('set terminal size ' + width + ',' + height)
-      console.log(cols + ',' + rows)
-
-  terminalContainer.style.width = width;
-  terminalContainer.style.height = height;
-  term.resize(cols, rows);
+  terminalContainer.style.width = width
+  terminalContainer.style.height = height
+  term.resize(cols, rows)
 }
 
-colsElement.addEventListener('change', setTerminalSize);
-rowsElement.addEventListener('change', setTerminalSize);
+colsElement.addEventListener('change', setTerminalSize)
+rowsElement.addEventListener('change', setTerminalSize)
 
-// optionElements.cursorBlink.addEventListener('change', createTerminal);
+createTerminal()
 
-createTerminal();
-
-function createTerminal() {
+function createTerminal () {
   // Clean terminal
   while (terminalContainer.children.length) {
-    terminalContainer.removeChild(terminalContainer.children[0]);
+    terminalContainer.removeChild(terminalContainer.children[0])
   }
   term = new Terminal({
     cursorBlink: true //  optionElements.cursorBlink.checked
-  });
+  })
   term.on('resize', function (size) {
     if (!pid) {
-      return;
+      return
     }
-    var cols = size.cols,
-        rows = size.rows,
-        url = '/terminals/' + pid + '/size?cols=' + cols + '&rows=' + rows;
+    var cols = size.cols
+    var rows = size.rows
+    var url = '/terminals/' + pid + '/size?cols=' + cols + '&rows=' + rows
 
-        term.cols = cols;
-        term.rows = rows;
+    term.cols = cols
+    term.rows = rows
 
-    fetch(url, {method: 'POST'});
-  });
-  protocol = (location.protocol === 'https:') ? 'wss://' : 'ws://';
-  socketURL = protocol + location.hostname + ((location.port) ? (':' + location.port) : '') + '/terminals/';
+    fetch(url, {method: 'POST'})
+  })
+  protocol = (location.protocol === 'https:') ? 'wss://' : 'ws://'
+  socketURL = protocol + location.hostname + ((location.port) ? (':' + location.port) : '') + '/terminals/'
 
-  term.open(terminalContainer);
+  term.open(terminalContainer)
+  term.fit()
 
-  term.fit();
+  var initialGeometry = term.proposeGeometry()
+  var cols = initialGeometry.cols
+  var rows = initialGeometry.rows
 
-  var initialGeometry = term.proposeGeometry(),
-      cols = initialGeometry.cols,
-      rows = initialGeometry.rows;
+  colsElement.value = cols
+  rowsElement.value = rows
 
-  colsElement.value = cols;
-  rowsElement.value = rows;
-
-  term.cols = cols;
-  term.rows = rows;
+  term.cols = cols
+  term.rows = rows
 
   fetch('/terminals?cols=' + cols + '&rows=' + rows, {method: 'POST'}).then(function (res) {
-
     console.log('fetch status: ' + res.status)
 
-    charWidth = Math.ceil(term.element.offsetWidth / cols);
-    charHeight = Math.ceil(term.element.offsetHeight / rows);
+    charWidth = Math.ceil(term.element.offsetWidth / cols)
+    charHeight = Math.ceil(term.element.offsetHeight / rows)
 
     res.text().then(function (pid) {
-      window.pid = pid;
-      socketURL += pid;
-      socket = new WebSocket(socketURL);
-      pidElement.innerText = 'Pid: ' + pid;
-      socket.onopen = runRealTerminal;
-      socket.onclose = resetSocket;
-      socket.onerror = runFakeTerminal;
-    });
-  });
+      window.pid = pid
+      socketURL += pid
+      socket = new WebSocket(socketURL)
+      pidElement.innerText = 'Pid: ' + pid
+      socket.onopen = runRealTerminal
+      socket.onclose = resetSocket
+      socket.onerror = runFakeTerminal
+    })
+  })
 }
 
-function resetSocket() {
-console.log('---------- websocket closed -----------');
-fetch('/terminals?cols=' + term.cols + '&rows=' + term.rows + '&processID=' + pid, {method: 'POST'}).then(function (res) {
-
-  // charWidth = Math.ceil(term.element.offsetWidth / cols);
-  // charHeight = Math.ceil(term.element.offsetHeight / rows);
-
-  res.text().then(function (pid) {
-
+function resetSocket () {
+  console.log('---------- websocket closed -----------')
+  fetch('/terminals?cols=' + term.cols + '&rows=' + term.rows + '&processID=' + pid, {method: 'POST'}).then(function (res) {
+    res.text().then(function (pid) {
       console.log('fetch status: ' + res.status)
-  
-
-
-    if (pid !== window.pid) {
-    window.pid = pid;
-    term.writeln('--------- new pid: ' + pid + ' ---------')
-    }
-    socketURL = protocol + location.hostname + ((location.port) ? (':' + location.port) : '') + '/terminals/' + pid;
-    socket = new WebSocket(socketURL);
-    pidElement.innerText = 'Pid: ' + pid;
-    socket.onopen = runRealTerminal;
-    socket.onclose = resetSocket;
-    socket.onerror = runFakeTerminal;
-  });
-});
-
+      if (pid !== window.pid) {
+        window.pid = pid
+        term.writeln('--------- new pid: ' + pid + ' ---------')
+      }
+      socketURL = protocol + location.hostname + ((location.port) ? (':' + location.port) : '') + '/terminals/' + pid
+      socket = new WebSocket(socketURL)
+      pidElement.innerText = 'Pid: ' + pid
+      socket.onopen = runRealTerminal
+      socket.onclose = resetSocket
+      socket.onerror = runFakeTerminal
+    })
+  })
 }
 
-function runRealTerminal() {
-  term.attach(socket);
-  term._initialized = true;
+function runRealTerminal () {
+  term.attach(socket)
+  term._initialized = true
 }
 
-function runFakeTerminal() {
+function runFakeTerminal () {
   if (term._initialized) {
-    return;
+    return
   }
 
-  term._initialized = true;
+  term._initialized = true
 
-  var shellprompt = '$ ';
+  var shellprompt = '$ '
 
   term.prompt = function () {
-    term.write('\r\n' + shellprompt);
-  };
+    term.write('\r\n' + shellprompt)
+  }
 
-  term.writeln('Welcome to xterm.js');
-  term.writeln('This is a local terminal emulation, without a real terminal in the back-end.');
-  term.writeln('Type some keys and commands to play around.');
-  term.writeln('');
-  term.prompt();
+  term.writeln('Welcome to xterm.js')
+  term.writeln('This is a local terminal emulation, without a real terminal in the back-end.')
+  term.writeln('Type some keys and commands to play around.')
+  term.writeln('')
+  term.prompt()
 
   term.on('key', function (key, ev) {
     var printable = (
       !ev.altKey && !ev.altGraphKey && !ev.ctrlKey && !ev.metaKey
-    );
+    )
 
-    if (ev.keyCode == 13) {
-      term.prompt();
-    } else if (ev.keyCode == 8) {
-     // Do not delete the prompt
+    if (ev.keyCode === 13) {
+      term.prompt()
+    } else if (ev.keyCode === 8) {
+      // Do not delete the prompt
       if (term.x > 2) {
-        term.write('\b \b');
+        term.write('\b \b')
       }
     } else if (printable) {
-      term.write(key);
+      term.write(key)
     }
-  });
+  })
 
   term.on('paste', function (data, ev) {
-    term.write(data);
-  });
+    term.write(data)
+  })
 }

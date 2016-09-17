@@ -15,38 +15,38 @@
     /*
      * CommonJS environment
      */
-    module.exports = fullscreen(require('../../src/xterm'));
-  } else if (typeof define == 'function') {
+    module.exports = fullscreen(require('../../src/xterm'))
+  } else if (typeof define === 'function') {
     /*
      * Require.js is available
      */
-    define(['../../src/xterm'], fullscreen);
+    define(['../../src/xterm'], fullscreen)
   } else {
     /*
      * Plain browser environment
      */
-    fullscreen(window.Terminal);
+    fullscreen(window.Terminal)
   }
 })(function (Xterm) {
-  var exports = {};
+  var exports = {}
 
   exports.toggleFullScreen = function (term, fullscreen) {
-    var fn;
+    var fn
 
-    if (typeof fullscreen == 'undefined') {
-      fn = (term.element.classList.contains('fullscreen')) ? 'remove' : 'add';
+    if (typeof fullscreen === 'undefined') {
+      fn = (term.element.classList.contains('fullscreen')) ? 'remove' : 'add'
     } else if (!fullscreen) {
-      fn = 'remove';
+      fn = 'remove'
     } else {
-      fn = 'add';
+      fn = 'add'
     }
 
-    term.element.classList[fn]('fullscreen');
-  };
+    term.element.classList[fn]('fullscreen')
+  }
 
   Xterm.prototype.toggleFullscreen = function (fullscreen) {
-    exports.toggleFullScreen(this, fullscreen);
-  };
+    exports.toggleFullScreen(this, fullscreen)
+  }
 
-  return exports;
-});
+  return exports
+})
