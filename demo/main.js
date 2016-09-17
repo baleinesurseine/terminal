@@ -68,7 +68,10 @@ function createTerminal () {
   term.rows = rows
 
   fetch('/terminals?cols=' + cols + '&rows=' + rows, {method: 'POST'}).then(function (res) {
-    console.log('fetch status: ' + res.status)
+    if (res.status !== 200) {
+      pidElement.innerText = 'Error: ' + res.status
+      return console.log('/terminals POST status: ' + res.status)
+    }
 
     charWidth = Math.ceil(term.element.offsetWidth / cols)
     charHeight = Math.ceil(term.element.offsetHeight / rows)
@@ -86,10 +89,14 @@ function createTerminal () {
 }
 
 function resetSocket () {
-  console.log('---------- websocket closed -----------')
+  console.log('---------- websocket reset -----------')
   fetch('/terminals?cols=' + term.cols + '&rows=' + term.rows + '&processID=' + pid, {method: 'POST'}).then(function (res) {
+
+    if (res.status !== 200) {
+      pidElement.innerText = 'Error: ' + res.status
+      return console.log('/terminals POST status: ' + res.status)
+    }
     res.text().then(function (pid) {
-      console.log('fetch status: ' + res.status)
       if (pid !== window.pid) {
         window.pid = pid
         term.writeln('--------- new pid: ' + pid + ' ---------')

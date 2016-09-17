@@ -1,6 +1,5 @@
 var express = require('express')
 var app = express()
-// var expressWs =
 require('express-ws')(app)
 var path = require('path')
 var os = require('os')
@@ -8,9 +7,9 @@ var pty = require('pty.js')
 var basicAuth = require('basic-auth')
 
 var auth = function (req, res, next) {
-  function unauthorized (res) {
-    res.set('WWW-Authenticate', 'Basic realm=Authorization Required')
-    return res.sendStatus(401)
+  function unauthorized (resp) {
+    resp.set('WWW-Authenticate', 'Basic realm=Authorization Required')
+    return resp.sendStatus(401)
   }
   var user = basicAuth(req)
   if (!user || !user.name || !user.pass) {
@@ -33,7 +32,7 @@ app.get('/', auth, function (req, res) {
   res.sendFile(path.join(__dirname, '/index.html'))
 })
 
-app.get('/style.css', function (req, res) {
+app.get('/style.css', auth, function (req, res) {
   res.sendFile(path.join(__dirname, '/style.css'))
 })
 
@@ -46,12 +45,9 @@ app.get('/fetch.js', auth, function (req, res) {
 })
 
 app.post('/terminals', auth, function (req, res) {
-  console.log(req.query)
   var cols = parseInt(req.query.cols)
   var rows = parseInt(req.query.rows)
   var pid = parseInt(req.query.processID)
-
-  console.log('pid= ' + pid)
 
   if (isNaN(pid) || !terminals[pid]) {
     var term = pty.spawn(process.platform === 'win32' ? 'cmd.exe' : 'bash', [], {
