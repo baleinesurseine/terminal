@@ -11,15 +11,20 @@ var terminalContainer = document.getElementById('terminal-container'),
       cursorBlink: document.querySelector('#option-cursor-blink')
     },
     colsElement = document.getElementById('cols'),
-    rowsElement = document.getElementById('rows');
+    rowsElement = document.getElementById('rows'),
+    pidElement = document.getElementById('pid-container');
 
 
 
 function setTerminalSize () {
+
   var cols = parseInt(colsElement.value),
       rows = parseInt(rowsElement.value),
       width = (cols * charWidth).toString() + 'px',
       height = (rows * charHeight).toString() + 'px';
+
+      console.log('set terminal size ' + width + ',' + height)
+      console.log(cols + ',' + rows)
 
   terminalContainer.style.width = width;
   terminalContainer.style.height = height;
@@ -49,6 +54,9 @@ function createTerminal() {
         rows = size.rows,
         url = '/terminals/' + pid + '/size?cols=' + cols + '&rows=' + rows;
 
+        term.cols = cols;
+        term.rows = rows;
+
     fetch(url, {method: 'POST'});
   });
   protocol = (location.protocol === 'https:') ? 'wss://' : 'ws://';
@@ -65,7 +73,12 @@ function createTerminal() {
   colsElement.value = cols;
   rowsElement.value = rows;
 
+  term.cols = cols;
+  term.rows = rows;
+
   fetch('/terminals?cols=' + cols + '&rows=' + rows, {method: 'POST'}).then(function (res) {
+
+    console.log('fetch status: ' + res.status)
 
     charWidth = Math.ceil(term.element.offsetWidth / cols);
     charHeight = Math.ceil(term.element.offsetHeight / rows);
@@ -74,13 +87,41 @@ function createTerminal() {
       window.pid = pid;
       socketURL += pid;
       socket = new WebSocket(socketURL);
+      pidElement.innerText = 'Pid: ' + pid;
       socket.onopen = runRealTerminal;
-      socket.onclose = runFakeTerminal;
+      socket.onclose = resetSocket;
       socket.onerror = runFakeTerminal;
     });
   });
 }
 
+function resetSocket() {
+console.log('---------- websocket closed -----------');
+fetch('/terminals?cols=' + term.cols + '&rows=' + term.rows + '&processID=' + pid, {method: 'POST'}).then(function (res) {
+
+  // charWidth = Math.ceil(term.element.offsetWidth / cols);
+  // charHeight = Math.ceil(term.element.offsetHeight / rows);
+
+  res.text().then(function (pid) {
+
+      console.log('fetch status: ' + res.status)
+  
+
+
+    if (pid !== window.pid) {
+    window.pid = pid;
+    term.writeln('--------- new pid: ' + pid + ' ---------')
+    }
+    socketURL = protocol + location.hostname + ((location.port) ? (':' + location.port) : '') + '/terminals/' + pid;
+    socket = new WebSocket(socketURL);
+    pidElement.innerText = 'Pid: ' + pid;
+    socket.onopen = runRealTerminal;
+    socket.onclose = resetSocket;
+    socket.onerror = runFakeTerminal;
+  });
+});
+
+}
 
 function runRealTerminal() {
   term.attach(socket);

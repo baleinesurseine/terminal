@@ -22,7 +22,7 @@ var auth = function(req, res, next) {
 }
 
 var terminals = {},
-    logs = {};
+logs = {};
 
 app.use('/build', express.static(__dirname + '/../build'));
 app.use('/addons', express.static(__dirname + '/../addons'));
@@ -45,31 +45,50 @@ app.get('/fetch.js', auth, function(req, res){
 
 
 app.post('/terminals', auth, function (req, res) {
+  console.log(req.query);
   var cols = parseInt(req.query.cols),
-      rows = parseInt(req.query.rows),
-      term = pty.spawn(process.platform === 'win32' ? 'cmd.exe' : 'bash', [], {
-        name: 'xterm-color',
-        cols: cols || 120,
-        rows: rows || 48,
-        cwd: process.env.HOME,
-        env: process.env
-      });
+  rows = parseInt(req.query.rows),
+  pid = parseInt(req.query.processID);
 
-  console.log('Created terminal with PID: ' + term.pid);
-  terminals[term.pid] = term;
-  logs[term.pid] = '';
-  term.on('data', function(data) {
-    logs[term.pid] += data;
-  });
+  console.log('pid= ' + pid)
+
+  if (isNaN(pid) || !terminals[pid]) {
+
+    var term = pty.spawn(process.platform === 'win32' ? 'cmd.exe' : 'bash', [], {
+      name: 'xterm-color',
+      cols: cols || 120,
+      rows: rows || 48,
+      cwd: process.env.HOME,
+      env: process.env
+    });
+    term.on('exit', function() {
+      console.log('pty exited pid: ' + term.pid)
+    })
+
+    term.on('close', function() {
+      console.log('pty closed pid: ' + term.pid)
+    })
+    console.log('Created terminal with PID: ' + term.pid);
+
+    terminals[term.pid] = term;
+    logs[term.pid] = '';
+    term.on('data', function(data) {
+      logs[term.pid] += data;
+    });
+  } else {
+    term = terminals[pid];
+    logs[term.pid]='';
+  }
+
   res.send(term.pid.toString());
   res.end();
 });
 
 app.post('/terminals/:pid/size', auth, function (req, res) {
   var pid = parseInt(req.params.pid),
-      cols = parseInt(req.query.cols),
-      rows = parseInt(req.query.rows),
-      term = terminals[pid];
+  cols = parseInt(req.query.cols),
+  rows = parseInt(req.query.rows),
+  term = terminals[pid];
 
   term.resize(cols, rows);
   console.log('Resized terminal ' + pid + ' to ' + cols + ' cols and ' + rows + ' rows.');
@@ -81,6 +100,12 @@ app.ws('/terminals/:pid', function (ws, req) {
   console.log('Connected to terminal ' + term.pid);
   ws.send(logs[term.pid]);
 
+  term.on('close', function() {
+    delete terminals[term.pid];
+    delete logs[term.pid];
+    ws.close()
+  })
+
   term.on('data', function(data) {
     try {
       ws.send(data);
@@ -91,20 +116,20 @@ app.ws('/terminals/:pid', function (ws, req) {
   ws.on('message', function(msg) {
     term.write(msg);
   });
-  ws.on('close', function () {
-    try {
-      process.kill(term.pid);
-    } catch (ex) {
-    }
-    console.log('Closed terminal ' + term.pid);
-    // Clean things up
-    delete terminals[term.pid];
-    delete logs[term.pid];
-  });
+  // ws.on('close', function () {
+  //   try {
+  //     process.kill(term.pid);
+  //   } catch (ex) {
+  //   }
+  //   console.log('Closed terminal ' + term.pid);
+  //   // Clean things up
+  //   delete terminals[term.pid];
+  //   delete logs[term.pid];
+  // });
 });
 
 var port = process.env.PORT || 3000,
-    host = os.platform() === 'win32' ? '127.0.0.1' : '0.0.0.0';
+host = os.platform() === 'win32' ? '127.0.0.1' : '0.0.0.0';
 
 console.log('App listening to http://' + host + ':' + port);
 app.listen(port, host);

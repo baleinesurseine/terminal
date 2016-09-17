@@ -10,7 +10,6 @@ POST /terminals
 POST /terminals/:pid/size
   term.resize
 
-
 main.js : client side
 - term : instance of Terminal class ; event: 'resize', 'data'
 - socket: webSocket; events: 'open', 'close', 'error', 'message'
