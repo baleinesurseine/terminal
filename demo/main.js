@@ -89,6 +89,7 @@ function createTerminal () {
 }
 
 function resetSocket () {
+  terminalContainer.className += ' fade-out'
   console.log('---------- websocket reset -----------')
   fetch('/terminals?cols=' + term.cols + '&rows=' + term.rows + '&processID=' + pid, {method: 'POST'}).then(function (res) {
 
@@ -103,6 +104,8 @@ function resetSocket () {
       }
       socketURL = protocol + location.hostname + ((location.port) ? (':' + location.port) : '') + '/terminals/' + pid
       socket = new WebSocket(socketURL)
+      terminalContainer.className = terminalContainer.className.replace(/\bfade-out\b/, '')
+
       pidElement.innerText = 'Pid: ' + pid
       socket.onopen = runRealTerminal
       socket.onclose = resetSocket

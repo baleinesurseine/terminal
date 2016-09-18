@@ -12,6 +12,7 @@
         <script src="addons/fullscreen/fullscreen.js" ></script>
     </head>
     <body>
+      <script>document.body.className += ' fade-out';</script>
         <h1>iMac terminal</h1>
         <div id="terminal-container"></div>
           <div style="text-align: center;">
@@ -27,6 +28,16 @@
           </div>
           <div id="pid-container">
           </div>
+
+          <footer>
+            <p>© 2016 Edouard FISCHER. All Rights Reserved.</p>
+          </footer>
         <script src="main.js" defer ></script>
+        <script>
+        window.onload = function () {
+          var b = document.body
+          b.className = b.className.replace(/\bfade-out\b/, 'fade-in')
+        }
+        </script>
     </body>
 </html>

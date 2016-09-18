@@ -49,7 +49,7 @@ app.post('/terminals', auth, function (req, res) {
   var rows = parseInt(req.query.rows)
   var pid = parseInt(req.query.processID)
 
-  if (isNaN(pid) || !terminals[pid]) {
+  if (isNaN(pid)) { // || !terminals[pid]
     var term = pty.spawn(process.platform === 'win32' ? 'cmd.exe' : 'bash', [], {
       name: 'xterm-color',
       cols: cols || 120,
