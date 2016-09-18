@@ -6,10 +6,14 @@ var pid
 var charWidth
 var charHeight
 
+var wsReset = 0
+var wsDate
+
 var terminalContainer = document.getElementById('terminal-container')
 var colsElement = document.getElementById('cols')
 var rowsElement = document.getElementById('rows')
 var pidElement = document.getElementById('pid-container')
+var wsElement = document.getElementById('ws-container')
 
 function setTerminalSize () {
   var cols = parseInt(colsElement.value)
@@ -81,6 +85,8 @@ function createTerminal () {
       socketURL += pid
       socket = new WebSocket(socketURL)
       pidElement.innerText = 'Pid: ' + pid
+      wsElement.innerText = 'WS: ' + wsReset
+      wsDate = new Date()
       socket.onopen = runRealTerminal
       socket.onclose = resetSocket
       socket.onerror = runFakeTerminal
@@ -105,6 +111,11 @@ function resetSocket () {
       socketURL = protocol + location.hostname + ((location.port) ? (':' + location.port) : '') + '/terminals/' + pid
       socket = new WebSocket(socketURL)
       terminalContainer.className = terminalContainer.className.replace(/\bfade-out\b/, '')
+
+      wsReset += 1
+      var oldWsDate = wsDate
+      wsDate = new Date()
+      wsElement.innerText = 'WS: ' + wsReset + ' (' + (wsDate - oldWsDate) / 1000 + 's)'
 
       pidElement.innerText = 'Pid: ' + pid
       socket.onopen = runRealTerminal

@@ -4,21 +4,18 @@ require('express-ws')(app)
 var path = require('path')
 var os = require('os')
 var pty = require('pty.js')
-var basicAuth = require('basic-auth')
+
+// var basicAuth = require('basic-auth')
 
 var auth = function (req, res, next) {
-  function unauthorized (resp) {
-    resp.set('WWW-Authenticate', 'Basic realm=Authorization Required')
-    return resp.sendStatus(401)
-  }
-  var user = basicAuth(req)
-  if (!user || !user.name || !user.pass) {
-    return unauthorized(res)
-  }
-  if (user.name === process.env.NAME && user.pass === process.env.PASSWD) {
-    return next()
+  const b64auth = (req.headers.authorization || '').split(' ')[1] || ''
+  const [login, password] = new Buffer(b64auth, 'base64').toString().split(':')
+  console.log(login + ' : ' + password)
+  if (!login || !password || login !== process.env.NAME || password !== process.env.PASSWD) {
+    res.set('WWW-Authenticate', 'Basic realm = "nope"')
+    return res.status(401).send('You shall not pass.')
   } else {
-    return unauthorized(res)
+    next()
   }
 }
 
@@ -32,7 +29,7 @@ app.get('/', auth, function (req, res) {
   res.sendFile(path.join(__dirname, '/index.html'))
 })
 
-app.get('/style.css', auth, function (req, res) {
+app.get('/style.css', function (req, res) {
   res.sendFile(path.join(__dirname, '/style.css'))
 })
 
@@ -40,7 +37,7 @@ app.get('/main.js', auth, function (req, res) {
   res.sendFile(path.join(__dirname, '/main.js'))
 })
 
-app.get('/fetch.js', auth, function (req, res) {
+app.get('/fetch.js', function (req, res) {
   res.sendFile(path.join(__dirname, '/fetch.min.js'))
 })
 
