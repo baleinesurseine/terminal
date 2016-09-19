@@ -41,7 +41,7 @@ app.get('/fetch.js', function (req, res) {
   res.sendFile(path.join(__dirname, '/fetch.min.js'))
 })
 
-app.post('/terminals', auth, function (req, res) {
+app.get('/terminals', auth, function (req, res) {
   var cols = parseInt(req.query.cols)
   var rows = parseInt(req.query.rows)
   var pid = parseInt(req.query.processID)
@@ -77,7 +77,7 @@ app.post('/terminals', auth, function (req, res) {
   res.end()
 })
 
-app.post('/terminals/:pid/size', auth, function (req, res) {
+app.get('/terminals/:pid/size', auth, function (req, res) {
   var pid = parseInt(req.params.pid)
   var cols = parseInt(req.query.cols)
   var rows = parseInt(req.query.rows)

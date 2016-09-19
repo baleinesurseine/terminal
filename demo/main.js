@@ -53,7 +53,7 @@ function createTerminal () {
     term.cols = cols
     term.rows = rows
 
-    fetch(url, {method: 'POST'})
+    fetch(url, {method: 'GET'})
   })
   protocol = (location.protocol === 'https:') ? 'wss://' : 'ws://'
   socketURL = protocol + location.hostname + ((location.port) ? (':' + location.port) : '') + '/terminals/'
@@ -71,7 +71,7 @@ function createTerminal () {
   term.cols = cols
   term.rows = rows
 
-  fetch('/terminals?cols=' + cols + '&rows=' + rows, {method: 'POST'}).then(function (res) {
+  fetch('/terminals?cols=' + cols + '&rows=' + rows, {method: 'GET'}).then(function (res) {
     if (res.status !== 200) {
       pidElement.innerText = 'Error: ' + res.status
       return console.log('/terminals POST status: ' + res.status)
@@ -97,7 +97,7 @@ function createTerminal () {
 function resetSocket () {
   terminalContainer.className += ' fade-out'
   console.log('---------- websocket reset -----------')
-  fetch('/terminals?cols=' + term.cols + '&rows=' + term.rows + '&processID=' + pid, {method: 'POST'}).then(function (res) {
+  fetch('/terminals?cols=' + term.cols + '&rows=' + term.rows + '&processID=' + pid, {method: 'GET'}).then(function (res) {
 
     if (res.status !== 200) {
       pidElement.innerText = 'Error: ' + res.status
