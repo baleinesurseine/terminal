@@ -33,7 +33,7 @@ app.get('/style.css', function (req, res) {
   res.sendFile(path.join(__dirname, '/style.css'))
 })
 
-app.get('/main.js', auth, function (req, res) {
+app.get('/main.js', function (req, res) {
   res.sendFile(path.join(__dirname, '/main.js'))
 })
 
